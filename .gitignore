@@ -1,8 +1,5 @@
-@"
 __pycache__/
 *.pyc
-evidence/*.db
-evidence/*.log
-evidence/*.json
+evidence/
 .env
-"@ | Out-File -Encoding utf8 .gitignore
+.agents/
