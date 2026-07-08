@@ -841,3 +841,229 @@ tr:hover td { background: rgba(255,255,255,0.01); }
   .stats-row { flex-wrap: wrap; }
   .stat-card { min-width: 140px; }
 }
+
+/* ======================================
+   LOGIN PAGE
+   ====================================== */
+
+.login-body {
+  overflow: hidden;
+}
+
+.login-wrapper {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* Left branding panel */
+.login-brand-panel {
+  flex: 1;
+  background: linear-gradient(145deg, #0a0d14 0%, #0f1420 50%, #0a1628 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  border-right: 1px solid var(--border);
+}
+
+.brand-bg-glow {
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(125,211,252,0.06) 0%, transparent 70%);
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: glowPulse 4s ease-in-out infinite alternate;
+}
+
+@keyframes glowPulse {
+  from { opacity: 0.4; transform: translate(-50%, -50%) scale(0.9); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+}
+
+.brand-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+
+.brand-logo {
+  font-size: 3.5rem;
+  margin-bottom: 16px;
+}
+
+.brand-content h1 {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.5px;
+}
+
+.brand-tagline {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  margin-top: 6px;
+  letter-spacing: 0.5px;
+}
+
+.brand-features {
+  margin-top: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.brand-feature-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.feature-icon {
+  width: 32px;
+  height: 32px;
+  background: rgba(125,211,252,0.06);
+  border: 1px solid rgba(125,211,252,0.12);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+}
+
+.brand-version {
+  position: absolute;
+  bottom: 24px;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: #2A2F3A;
+  letter-spacing: 1px;
+}
+
+/* Right form panel */
+.login-form-panel {
+  width: 480px;
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.login-card {
+  width: 340px;
+}
+
+.login-header {
+  margin-bottom: 28px;
+}
+
+.login-header h2 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.login-header p {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+.login-field {
+  margin-bottom: 18px;
+}
+
+.login-field label {
+  display: block;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.login-error {
+  font-size: 0.78rem;
+  color: var(--red);
+  background: rgba(239,91,80,0.08);
+  border: 1px solid rgba(239,91,80,0.2);
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin-bottom: 14px;
+}
+
+.btn-login {
+  width: 100%;
+  padding: 11px;
+  background: var(--accent);
+  color: #0B0D12;
+  border: none;
+  border-radius: 6px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-login:hover:not(:disabled) { background: #5EC8F5; }
+.btn-login:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.login-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid transparent;
+  border-top-color: #0B0D12;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+.login-footer {
+  margin-top: 24px;
+  text-align: center;
+  font-size: 0.7rem;
+  color: #2A2F3A;
+}
+
+/* Logout button in sidebar */
+.btn-logout {
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  cursor: pointer;
+  color: var(--text-dim);
+  transition: all 0.15s ease;
+}
+
+.btn-logout:hover {
+  background: rgba(239,91,80,0.08);
+  color: var(--red);
+}
+
+@media (max-width: 900px) {
+  .login-wrapper { flex-direction: column; }
+  .login-brand-panel { display: none; }
+  .login-form-panel { width: 100%; flex: 1; }
+}
+}

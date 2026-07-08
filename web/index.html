@@ -24,7 +24,8 @@
     <div class="sidebar-spacer"></div>
     <div class="sidebar-bottom">
       <button class="nav-btn" title="Settings" onclick="openSettings()">⚙️</button>
-      <div class="sidebar-avatar">S</div>
+      <button class="btn-logout" title="Sign Out" onclick="handleLogout()">🚪</button>
+      <div class="sidebar-avatar" title="Logged in as Admin">S</div>
     </div>
   </nav>
 
@@ -660,7 +661,40 @@
     }
   }
 
-  window.onload = function() {
+  async function handleLogout() {
+    try {
+      const resp = await fetch("/api/auth/logout", { method: "POST" });
+      if (resp.ok) {
+        window.location.href = "/login";
+      }
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
+  }
+
+  // Intercept fetch responses to catch 401 Unauthorized errors globally
+  const originalFetch = window.fetch;
+  window.fetch = async function(...args) {
+    const response = await originalFetch(...args);
+    if (response.status === 401 && !args[0].includes("/api/auth/me") && !args[0].includes("/api/auth/login")) {
+      window.location.href = "/login";
+    }
+    return response;
+  };
+
+  window.onload = async function() {
+    // Check authentication status first
+    try {
+      const authResp = await fetch("/api/auth/me");
+      if (!authResp.ok) {
+        window.location.href = "/login";
+        return;
+      }
+    } catch (err) {
+      window.location.href = "/login";
+      return;
+    }
+
     refreshTickets();
     const liveContainCheck = document.getElementById("live_contain");
     const liveModeEl = document.getElementById("metric-live-mode");

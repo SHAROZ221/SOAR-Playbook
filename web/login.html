@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SecFlow Engine - Sign In</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css?v=3">
+</head>
+<body class="login-body">
+
+  <div class="login-wrapper">
+    <!-- Left: Branding Panel -->
+    <div class="login-brand-panel">
+      <div class="brand-bg-glow"></div>
+      <div class="brand-content">
+        <div class="brand-logo">🛡️</div>
+        <h1>SecFlow Engine</h1>
+        <p class="brand-tagline">Security Orchestration, Automation & Response</p>
+        <div class="brand-features">
+          <div class="brand-feature-item">
+            <span class="feature-icon">⚡</span>
+            <span>Automated Threat Response</span>
+          </div>
+          <div class="brand-feature-item">
+            <span class="feature-icon">🔍</span>
+            <span>Real-time IOC Enrichment</span>
+          </div>
+          <div class="brand-feature-item">
+            <span class="feature-icon">📊</span>
+            <span>Live Playbook Execution</span>
+          </div>
+        </div>
+      </div>
+      <div class="brand-version">SOAR Platform v1.1</div>
+    </div>
+
+    <!-- Right: Login Form -->
+    <div class="login-form-panel">
+      <div class="login-card">
+        <div class="login-header">
+          <h2>Welcome back</h2>
+          <p>Sign in to access the SOC dashboard</p>
+        </div>
+
+        <form id="login-form" onsubmit="handleLogin(event)">
+          <div class="login-field">
+            <label for="login-user">Username</label>
+            <input type="text" id="login-user" class="form-input" placeholder="Enter your username" autocomplete="username" autofocus required>
+          </div>
+          <div class="login-field">
+            <label for="login-pass">Password</label>
+            <div class="input-with-toggle">
+              <input type="password" id="login-pass" class="form-input" placeholder="Enter your password" autocomplete="current-password" required>
+              <button type="button" class="btn-eye" onclick="toggleLoginPass(this)">👁</button>
+            </div>
+          </div>
+
+          <div id="login-error" class="login-error hidden">Invalid username or password</div>
+
+          <button type="submit" class="btn-login" id="login-btn">
+            <span class="login-spinner hidden"></span>
+            Sign In
+          </button>
+        </form>
+
+        <div class="login-footer">
+          <span>🔒 Protected by session-based authentication</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // If already authenticated, redirect to dashboard
+    fetch("/api/auth/me").then(r => {
+      if (r.ok) window.location.href = "/";
+    });
+
+    function toggleLoginPass(btnEl) {
+      const input = document.getElementById("login-pass");
+      if (input.type === "password") { input.type = "text"; btnEl.innerText = "🙈"; }
+      else { input.type = "password"; btnEl.innerText = "👁"; }
+    }
+
+    async function handleLogin(event) {
+      event.preventDefault();
+
+      const errorEl = document.getElementById("login-error");
+      const btn = document.getElementById("login-btn");
+      const spinner = btn.querySelector(".login-spinner");
+      errorEl.classList.add("hidden");
+      btn.disabled = true;
+      spinner.classList.remove("hidden");
+
+      const username = document.getElementById("login-user").value.trim();
+      const password = document.getElementById("login-pass").value;
+
+      try {
+        const resp = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await resp.json();
+
+        if (resp.ok && data.status === "success") {
+          window.location.href = "/";
+        } else {
+          errorEl.innerText = data.detail || "Invalid username or password";
+          errorEl.classList.remove("hidden");
+        }
+      } catch (err) {
+        errorEl.innerText = "Connection failed. Is the server running?";
+        errorEl.classList.remove("hidden");
+      } finally {
+        btn.disabled = false;
+        spinner.classList.add("hidden");
+      }
+    }
+  </script>
+</body>
+</html>

@@ -11,8 +11,10 @@ import json
 import sqlite3
 import asyncio
 import threading
-from fastapi import FastAPI, BackgroundTasks, HTTPException
-from fastapi.responses import StreamingResponse, FileResponse
+import hashlib
+import secrets
+from fastapi import FastAPI, BackgroundTasks, HTTPException, Request, Response, Cookie
+from fastapi.responses import StreamingResponse, FileResponse, RedirectResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -30,6 +32,27 @@ class SettingsPayload(BaseModel):
     abuseipdb_api_key: str = ""
     telegram_bot_token: str = ""
     telegram_chat_id: str = ""
+
+class LoginPayload(BaseModel):
+    username: str
+    password: str
+
+# Simple in-memory session store
+active_sessions = set()
+
+# Helper: Hash password
+def hash_password(password: str) -> str:
+    return hashlib.sha256(password.encode("utf-8")).hexdigest()
+
+# Helper: Get authentication credentials from .env
+def get_auth_credentials():
+    if dotenv and os.path.exists(ENV_PATH):
+        dotenv.load_dotenv(ENV_PATH, override=True)
+    admin_user = os.getenv("ADMIN_USER", "admin")
+    # Default password hash for 'secflow123' if not set in .env
+    default_hash = hash_password("secflow123")
+    admin_pass_hash = os.getenv("ADMIN_PASSWORD_HASH", default_hash)
+    return admin_user, admin_pass_hash
 
 
 # Enable CORS for development convenience
@@ -168,9 +191,56 @@ def execute_playbook_bg(alert: dict, playbook: dict, contain_mode: str, log_queu
             loop.call_soon_threadsafe(log_queue.put_nowait, None)
 
 
+# Helper: Validate Session
+def get_session_user(session_id: str = Cookie(None)) -> str:
+    if not session_id or session_id not in active_sessions:
+        raise HTTPException(status_code=401, detail="Unauthorized session")
+    return "admin"
+
+@app.get("/login")
+def login_page():
+    login_path = os.path.join(WEB_DIR, "login.html")
+    if not os.path.exists(login_path):
+        raise HTTPException(status_code=404, detail="Login page not found.")
+    return FileResponse(login_path)
+
+@app.post("/api/auth/login")
+def login_api(payload: LoginPayload, response: Response):
+    expected_user, expected_hash = get_auth_credentials()
+    if payload.username != expected_user or hash_password(payload.password) != expected_hash:
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+    
+    session_id = str(uuid.uuid4())
+    active_sessions.add(session_id)
+    # Set standard session cookie (lasts for session length)
+    response.set_cookie(
+        key="session_id",
+        value=session_id,
+        httponly=True,
+        samesite="lax",
+        secure=False  # Allow HTTP in local dev
+    )
+    return {"status": "success"}
+
+@app.post("/api/auth/logout")
+def logout_api(response: Response, session_id: str = Cookie(None)):
+    if session_id in active_sessions:
+        active_sessions.remove(session_id)
+    response.delete_cookie(key="session_id")
+    return {"status": "success"}
+
+@app.get("/api/auth/me")
+def check_auth(session_id: str = Cookie(None)):
+    if not session_id or session_id not in active_sessions:
+        raise HTTPException(status_code=401, detail="Not logged in")
+    return {"username": "admin"}
+
 @app.get("/")
-def read_root():
-    """Serves the dashboard HTML interface."""
+def read_root(session_id: str = Cookie(None)):
+    """Serves the dashboard HTML interface if authenticated, else redirects to login."""
+    if not session_id or session_id not in active_sessions:
+        return RedirectResponse(url="/login")
+        
     index_path = os.path.join(WEB_DIR, "index.html")
     if not os.path.exists(index_path):
         raise HTTPException(status_code=404, detail="Dashboard frontend (web/index.html) not found.")
@@ -186,14 +256,16 @@ def read_css():
     return FileResponse(css_path, media_type="text/css")
 
 
+from fastapi import Depends
+
 @app.post("/api/alerts")
-async def trigger_playbook_endpoint(payload: AlertPayload, background_tasks: BackgroundTasks):
+async def trigger_playbook_endpoint(payload: AlertPayload, background_tasks: BackgroundTasks, user: str = Depends(get_session_user)):
     """
     Ingests a new alert, loads the default playbook,
     and spins up a background thread to run the playbook.
     """
     try:
-        playbook = load_yaml(PLAYBOOK_PATH)
+      playbook = load_yaml(PLAYBOOK_PATH)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to load playbook.yaml: {e}")
 
@@ -217,7 +289,7 @@ async def trigger_playbook_endpoint(payload: AlertPayload, background_tasks: Bac
 
 
 @app.get("/api/runs/{run_id}/stream")
-def stream_run_logs(run_id: str):
+def stream_run_logs(run_id: str, user: str = Depends(get_session_user)):
     """
     Streams playbook execution output as Server-Sent Events (SSE).
     """
@@ -243,7 +315,7 @@ def stream_run_logs(run_id: str):
 
 
 @app.get("/api/tickets")
-def list_tickets():
+def list_tickets(user: str = Depends(get_session_user)):
     """Returns all open and resolved tickets in the SQLite queue."""
     try:
         conn = sqlite3.connect(DB_PATH)
@@ -257,7 +329,7 @@ def list_tickets():
 
 
 @app.post("/api/tickets/{ticket_id}/resolve")
-def resolve_ticket(ticket_id: int):
+def resolve_ticket(ticket_id: int, user: str = Depends(get_session_user)):
     """Marks a ticket as resolved."""
     try:
         conn = sqlite3.connect(DB_PATH)
@@ -272,7 +344,7 @@ def resolve_ticket(ticket_id: int):
         raise HTTPException(status_code=500, detail=f"Database error: {e}")
 
 @app.get("/api/settings")
-def get_settings():
+def get_settings(user: str = Depends(get_session_user)):
     """Returns masked credentials stored in the local .env configuration."""
     try:
         return get_env_settings()
@@ -280,7 +352,7 @@ def get_settings():
         raise HTTPException(status_code=500, detail=f"Failed to read settings: {e}")
 
 @app.post("/api/settings")
-def save_settings(payload: SettingsPayload):
+def save_settings(payload: SettingsPayload, user: str = Depends(get_session_user)):
     """Saves credentials securely to .env and updates the current environment."""
     try:
         write_env_settings(payload)

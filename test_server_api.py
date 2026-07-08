@@ -15,6 +15,10 @@ from server import app
 def test_flow():
     client = TestClient(app)
 
+    # 0. Authenticate test client
+    login_resp = client.post("/api/auth/login", json={"username": "admin", "password": "secflow123"})
+    assert login_resp.status_code == 200, "Authentication failed"
+
     print("[+] Step 1: Testing Settings API (GET and POST)...")
     
     # 1. Fetch initial settings
