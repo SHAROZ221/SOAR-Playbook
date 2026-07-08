@@ -12,7 +12,7 @@ The platform executes declarative playbooks (defined in YAML) dynamically, routi
 
 ## 📸 Dashboard Preview
 
-![SecFlow Engine Dashboard](dashboard_mockup.jpg)
+![SecFlow Engine Dashboard](dashboard_mockup.png)
 
 ---
 
