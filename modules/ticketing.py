@@ -58,6 +58,19 @@ def open_ticket(alert_id: str, indicator: str, severity: str, summary: str) -> d
     git_token = os.getenv("GITHUB_TOKEN")
     git_repo = os.getenv("GITHUB_REPO")
     
+    if git_repo:
+        git_repo = git_repo.strip()
+        # If user entered the full URL, e.g., https://github.com/owner/repo
+        if "github.com/" in git_repo:
+            parts = git_repo.split("github.com/")
+            if len(parts) > 1:
+                git_repo = parts[1].strip("/")
+                # Clean up query params if any
+                git_repo = git_repo.split("?")[0]
+                # Clean up .git suffix if any
+                if git_repo.endswith(".git"):
+                    git_repo = git_repo[:-4]
+                    
     if git_token and git_repo and severity in ["high", "critical"]:
         try:
             url = f"https://api.github.com/repos/{git_repo}/issues"

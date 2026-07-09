@@ -65,6 +65,7 @@ graph TD
 * **Dynamic Playbook Execution**: Parses unquoted variables and list matches via a secure Abstract Syntax Tree (AST) evaluator.
 * **Incident Deduplication**: Programmatically checks the SQLite database for existing open cases before opening new tickets.
 * **CLI Safety Safeguard**: Demands interactive validation before executing live containment scripts.
+* **GitHub Issue Escalation**: Automatically generates detailed incident reports and opens GitHub Issues for `high` and `critical` alerts, logging a clickable `GitHub Ref` back into your dashboard's Ticketing Center. Accepts both repository paths (`owner/repo`) and full URLs (`https://github.com/owner/repo`).
 * **Interactive Dashboard (Concept B)**:
   * **Sidebar**: Quick view toggling (Dashboard, Threats Feed, Network Metrics, Assets tracker, Compliance logs, Reports export center).
   * **Threats Feed**: Enriched observables with Abuse IP scores and geographic tags.
@@ -88,6 +89,8 @@ Create a `.env` file in the root directory to store your credentials:
 ABUSEIPDB_API_KEY=your_abuseipdb_api_key_here
 TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
 TELEGRAM_CHAT_ID=your_telegram_channel_or_chat_id
+GITHUB_TOKEN=your_github_personal_access_token_here
+GITHUB_REPO=your_github_repository_path_or_url_here
 
 # Dashboard Credentials (Default)
 ADMIN_USER=admin
