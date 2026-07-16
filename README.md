@@ -66,6 +66,9 @@ graph TD
 * **Incident Deduplication**: Programmatically checks the SQLite database for existing open cases before opening new tickets.
 * **CLI Safety Safeguard**: Demands interactive validation before executing live containment scripts.
 * **GitHub Issue Escalation**: Automatically generates detailed incident reports and opens GitHub Issues for `high` and `critical` alerts, logging a clickable `GitHub Ref` back into your dashboard's Ticketing Center. Accepts both repository paths (`owner/repo`) and full URLs (`https://github.com/owner/repo`).
+* **Automated PDF Incident Reports**: Generate and download beautifully structured, visual PDF incident response reports featuring severity-colored badges and structured response metadata directly from the Compliance section.
+* **Jira Escalation Integration**: Connects to Jira Cloud to auto-generate Tasks/Tickets when high-severity events are triggered.
+* **Slack & Discord Webhook Alerts**: Dispatch rich text incident notifications to Slack and Discord channels in parallel with existing Telegram bot alerts.
 * **Interactive Dashboard (Concept B)**:
   * **Sidebar**: Quick view toggling (Dashboard, Threats Feed, Network Metrics, Assets tracker, Compliance logs, Reports export center).
   * **Threats Feed**: Enriched observables with Abuse IP scores and geographic tags.
@@ -92,6 +95,16 @@ TELEGRAM_CHAT_ID=your_telegram_channel_or_chat_id
 GITHUB_TOKEN=your_github_personal_access_token_here
 GITHUB_REPO=your_github_repository_path_or_url_here
 
+# Slack & Discord Webhooks
+SLACK_WEBHOOK_URL=your_slack_webhook_url_here
+DISCORD_WEBHOOK_URL=your_discord_webhook_url_here
+
+# Jira Cloud Integration
+JIRA_BASE_URL=https://your-org.atlassian.net
+JIRA_EMAIL=your_email@company.com
+JIRA_API_TOKEN=your_jira_api_token_here
+JIRA_PROJECT_KEY=SEC
+
 # Dashboard Credentials (Default)
 ADMIN_USER=admin
 # To use custom passwords, generate a SHA-256 hash
@@ -115,6 +128,10 @@ Open your browser and navigate to **`http://127.0.0.1:8000`** to access the dash
 * In the **Ingest Alert** panel, select a preset (SSH Brute-force, Tor Exit Node, Port Scan) or fill in a custom alert, then click **Run Playbook**.
 * Watch the **Playbook Execution** pipeline run step-by-step in real-time, accompanied by live logs in the **Security Events Log** console at the bottom.
 
+### Incident PDF Download
+* Navigate to the **Compliance & Playbook Runs** (📄 icon) page from the sidebar.
+* View past playbook runs and click the **PDF** button at the end of any row to dynamically compile and download a clean incident response document.
+
 ### Command Line Tool (CLI)
 You can trigger playbook runs directly from the terminal:
 ```bash
@@ -127,12 +144,21 @@ python main.py --alert sample_alerts/sample_alert_malicious_ip.json --live-conta
 
 ---
 
-## 🧪 Running Automated Tests
+## 🧪 Testing the Integrations
 
-Run the integration API test suite to verify settings routing, encryption key masking, SQLite ticketing, and playbook execution steps:
+### 1. Integration API Test Suite
+Run the automated test suite to verify settings routing, encryption key masking, SQLite ticketing, and playbook execution steps:
 ```bash
 python test_server_api.py
 ```
+
+### 2. Testing Webhook & Jira Escalations
+* Launch the web dashboard and click the **Settings** gear icon (⚙️) on the bottom-left sidebar.
+* Input your Slack URL, Discord URL, or Jira credentials and click **Save Settings**.
+* Trigger any **High** or **Critical** alert from the Ingestion Panel.
+* Confirm that:
+  * A Slack message and Discord message arrive in your channels in real-time.
+  * A new task ticket is automatically logged under the corresponding project in Jira.
 
 ---
 
