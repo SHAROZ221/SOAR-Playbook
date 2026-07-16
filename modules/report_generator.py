@@ -225,4 +225,4 @@ def generate_incident_pdf(alert_id: str, run_log: dict, ticket: dict) -> bytes:
     for i, (label, value) in enumerate(rows_6):
         pdf.info_row(label, value, i)
 
-    return pdf.output()
+    return bytes(pdf.output())
